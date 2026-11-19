@@ -1,0 +1,11 @@
+streamlit
+pandas
+requests
+beautifulsoup4
+python-dotenv
+pydantic
+langchain-core
+langchain-anthropic
+langchain-tavily
+langgraph
+tzdata
