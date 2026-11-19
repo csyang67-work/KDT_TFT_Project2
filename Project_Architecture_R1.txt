@@ -1,0 +1,37 @@
+plant_care_app/
+├── .env                        # API 키 (Claude, 검색 API 등)
+├── config.py                   # 사이트 URL, DB 경로, 청킹/검색/모델 설정
+├── requirements.txt
+├── app.py                      # 웹 화면 진입점 (2단 레이아웃: 좌측 이미지/상태, 우측 챗봇)
+│
+├── models/                     # 데이터·상태 모델링 폴더
+│   ├── __init__.py
+│   └── plant_state.py            # 식물 상태(수분, 조도, 온도, 건강도, 명령 이력 등) 모델
+│
+├── crawlers/                   # 3개 사이트 크롤링 폴더
+│   ├── __init__.py
+│   ├── base.py                 # 공통 요청/링크 탐색/문서 포맷 헬퍼
+│   ├── site1_crawler.py        # 사이트 1 크롤러
+│   ├── site2_crawler.py        # 사이트 2 크롤러
+│   └── site3_crawler.py        # 사이트 3 크롤러
+│
+├── rag/                        # 크롤링 데이터 적재 및 벡터 검색 폴더
+│   ├── __init__.py
+│   ├── document.py             # 수집 데이터 -> Document 변환 및 청킹
+│   ├── vectorstore.py          # ChromaDB 저장/로드/유사도 검색
+│   └── chroma_db/              # (또는 루트/data 하위에 두어도 무방)
+│
+├── tools/                      # 챗봇이 호출할 기능(도구) 폴더
+│   ├── __init__.py
+│   ├── plant_commands.py       # 식물 명령 실행 (물주기, 조명 켜기/끄기, 환기/영양 등 -> 상태 갱신)
+│   └── web_search.py           # 웹 검색 도구 (크롤링 DB에 없는 최신/외부 정보 검색)
+│
+├── agent/                      # 챗봇 두뇌(RAG + 웹검색 + 명령 라우팅) 폴더
+│   ├── __init__.py
+│   ├── prompts.py              # 식물 페르소나, 명령 규칙, 답변 스타일 프롬프트
+│   └── chatbot_service.py      # 사용자 입력 분석 -> 명령 실행 / RAG 검색 / 웹검색 조합 및 응답 생성
+│
+└── ui/                         # 화면 구성요소(좌측 패널/우측 챗봇) 분리 폴더
+    ├── __init__.py
+    ├── plant_panel.py          # 좌측 상단 이미지 + 좌측 하단 상태 정보 렌더링
+    └── chat_panel.py           # 우측 챗봇 대화창 및 입력 처리 렌더링
