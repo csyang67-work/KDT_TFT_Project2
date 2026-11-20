@@ -1,38 +1,74 @@
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage
+from langgraph.graph import END, START, StateGraph
+from langgraph.prebuilt import ToolNode, tools_condition
 
-# LLM 모델 불러와야 함
-from KDT_TFT_Project2.state.plant_state_back1 import 
+from llm.llm import llm_with_tools
+from state.plant_state import PlantAgentState
+from tools.plant_tool import plant_tools
+
 
 SYSTEM_PROMPT = """
-너는 Oh! My Garden이라는 식물 관리 도우미다.
-사용자가 등록한 식물의 정보와 관리 기록, 제공된 참고 자료를 바탕으로 한국어로 답변한다.
+너는 OMG 가상 정원의 식물 도우미다.
 
-원칙:
-1. 식물 상태를 보지 않고 병해충이나 물 부족을 확정하지 않는다.
-2. 물 주기는 날짜만으로 단정하지 말고 흙 상태, 화분, 계절, 환경을 함께 고려한다.
-3. 참고 자료가 없으면 공식 자료를 확인한 것처럼 말하지 않는다.
-4. 사용자가 말하지 않은 식물 특성을 사실처럼 만들어내지 않는다.
-5. 기록된 정보와 추정 정보를 구분한다.
-6. 답변은 초보자도 이해하기 쉽게 단계별로 설명한다.
+가상 식물의 현재 상태와 실제 식물 정보를 구분해서 답변한다.
+현재 게임 상태를 바꾸거나 조회할 때는 알맞은 도구를 사용한다.
+실제 식물 관리 정보가 필요하면 식물 도감 검색을 사용한다.
+도감에 정보가 부족하거나 최신 정보가 필요하면 웹 검색을 사용한다.
+물 주기, 환경 변경, 게임 시간 변경 후에는 도구 결과를 기준으로 설명한다.
 """
 
-def generate_plant_answer(state: PlantAgentState) -> dict[str, str]:
-    """식물별 컨텍스트와 질문으로 답변을 생성하는 노드."""
-    system_prompt = (
-        f"{SYSTEM_PROMPT}\n\n"
-        f"[현재 식물]\n{state['plant_name']} (plant_id: {state['plant_id']})\n\n"
-        "[이 식물의 저장 정보, 최근 대화, 관리 기록 및 참고 지식]\n"
-        f"{state['plant_context']}"
-    )
-    response = get_chat_model().invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=state["question"]),
-    ])
 
-    content = response.content
-    if isinstance(content, list):
-        content = "\n".join(
-            item.get("text", str(item)) if isinstance(item, dict) else str(item)
-            for item in content
+def call_model(state: PlantAgentState) -> dict:
+    """질문과 식물 상태를 전달해 답변 또는 도구 호출을 받습니다."""
+    system_message = SystemMessage(
+        content=(
+            f"{SYSTEM_PROMPT}\n\n"
+            f"[가상 식물]\n"
+            f"이름: {state['plant_name']}\n"
+            f"성장 단계: {state['growth_stage']}\n"
+            f"건강도: {state['health']}\n"
+            f"수분: {state['water_level']}\n"
+            f"게임 시간: {state['game_time']}\n"
+            f"환경: {state['environment']}\n\n"
+            f"[참고 문맥]\n{state['plant_context']}"
         )
-    return {"generation": str(content)}
+    )
+
+    response = llm_with_tools.invoke(
+        [system_message] + state["messages"]
+    )
+
+    return {"messages": [response]}
+
+
+def save_final_answer(state: PlantAgentState) -> dict[str, str]:
+    """마지막 AI 응답을 generation 필드에 저장합니다."""
+    last_message = state["messages"][-1]
+
+    if isinstance(last_message, AIMessage):
+        return {"generation": str(last_message.content)}
+
+    return {"generation": ""}
+
+
+builder = StateGraph(PlantAgentState)
+
+builder.add_node("agent", call_model)
+builder.add_node("tools", ToolNode(plant_tools))
+builder.add_node("save_answer", save_final_answer)
+
+builder.add_edge(START, "agent")
+
+builder.add_conditional_edges(
+    "agent",
+    tools_condition,
+    {
+        "tools": "tools",
+        END: "save_answer",
+    },
+)
+
+builder.add_edge("tools", "agent")
+builder.add_edge("save_answer", END)
+
+plant_graph = builder.compile()

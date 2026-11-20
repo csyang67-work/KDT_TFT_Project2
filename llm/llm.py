@@ -6,6 +6,7 @@ Qwen 설정을 주석 처리하세요.
 
 from langchain_ollama import ChatOllama
 from config import OLLAMA_BASE_URL, QWEN_MODEL
+from tools.plant_tool import plant_tools
 
 # 기본 모델: Ollama에서 실행하는 Qwen3
 llm = ChatOllama(
@@ -20,7 +21,4 @@ llm = ChatOllama(
 
 # llm = ChatAnthropic(model_name=CLAUDE_MODEL)
 
-# 도구들 모음
-tools = []
-
-llm_with_tools = llm.bind_tools(tools)
+llm_with_tools = llm.bind_tools(plant_tools)

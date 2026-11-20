@@ -13,6 +13,8 @@ PLANT_CATALOG_CSV = Path(__file__).resolve().parent / "data" / "plants_catalog_R
 # ChromaDB 저장 폴더와 컬렉션 이름
 CHROMA_PATH = str(Path(__file__).resolve().parent / "vector_db" / "chroma")
 COLLECTION_NAME = "plant_catalog"
+# 사용자가 키우는 식물의 관찰·돌봄 기록을 검색하기 위한 컬렉션
+USER_PLANT_COLLECTION_NAME = "user_plant_records"
 
 # 임베딩 모델: 학원 ex1019/ex1102 방식처럼 OllamaEmbeddings로 직접 생성
 EMBEDDING_MODEL = "bge-m3"
@@ -27,8 +29,6 @@ CLAUDE_MODEL = os.getenv("LLM_MODEL_C")
 # 로컬 Qwen3로 전환할 때 사용할 모델
 QWEN_MODEL = os.getenv("LLM_MODEL_Q")
 
-# CSV에서 만든 실제 식물 도감 자료
-COLLECTION_NAME = "plant_catalog"
-
-# 사용자가 키우는 식물의 관찰·돌봄 기록을 검색하기 위한 컬렉션
-USER_PLANT_COLLECTION_NAME = "user_plant_records"
+# SQLite 파일
+DATABASE_PATH = Path(__file__).resolve().parent / "data" / "omg_game.db"
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
