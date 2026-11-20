@@ -1,15 +1,26 @@
-from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
+"""
+Qwen3를 기본 채팅 모델로 사용합니다.
+Claude API를 사용하려면 아래 Claude 설정을 활성화하고
+Qwen 설정을 주석 처리하세요.
+"""
 
-from config import CLAUDE_MODEL, PROJECT_ROOT, QWEN_MODEL, OLLAMA_BASE_URL
+from langchain_ollama import ChatOllama
+from config import OLLAMA_BASE_URL, QWEN_MODEL
 
-# 프로젝트 루트의 .env에서 ANTHROPIC_API_KEY를 읽습니다.
-load_dotenv(PROJECT_ROOT / ".env")
+# 기본 모델: Ollama에서 실행하는 Qwen3
+llm = ChatOllama(
+    model=QWEN_MODEL,
+    base_url=OLLAMA_BASE_URL,
+)
 
-# 기본 설정: Claude API
-llm = ChatAnthropic(model=CLAUDE_MODEL)
+# Claude API로 바꿀 때 사용할 설정
+# config.py의 CLAUDE_MODEL은 .env의 LLM_MODEL_C 값을 사용합니다.
+# from langchain_anthropic import ChatAnthropic
+# from config import CLAUDE_MODEL
 
-# Ollama의 Qwen3를 사용하려면 위 Claude 설정을 주석 처리하고,
-# 아래 두 줄의 주석을 해제하세요. Ollama가 실행 중이어야 합니다.
-# from langchain_ollama import ChatOllama
-# llm = ChatOllama(model=QWEN_MODEL, base_url=OLLAMA_BASE_URL)
+# llm = ChatAnthropic(model_name=CLAUDE_MODEL)
+
+# 도구들 모음
+tools = []
+
+llm_with_tools = llm.bind_tools(tools)
