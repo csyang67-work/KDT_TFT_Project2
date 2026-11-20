@@ -15,14 +15,14 @@ import streamlit as st
 
 # 화면 확인용 예시 데이터 (나중에 CSV로 교체)
 SAMPLE_PLANTS = [
-    {"emoji": "🪴", "name": "몬스테라",   "tags": ["관엽식물", "반그늘", "인테리어"]},
+    {"emoji": "🌱", "name": "몬스테라",   "tags": ["관엽식물", "반그늘", "인테리어"]},
     {"emoji": "🌵", "name": "스투키",     "tags": ["다육식물", "그늘", "공기정화"]},
     {"emoji": "🌿", "name": "로즈마리",   "tags": ["허브", "양지", "요리"]},
     {"emoji": "🍅", "name": "방울토마토", "tags": ["채소", "양지", "수확"]},
 ]
 
 SAMPLE_RECORDS = [
-    {"emoji": "🪴", "name": "몬스테라",   "type": "관엽식물", "period": "2026.10.05 ~ 지금",
+    {"emoji": "🌱", "name": "몬스테라",   "type": "관엽식물", "period": "2026.10.05 ~ 지금",
      "days": 45, "status": "키우는 중", "water": 14, "last_water": "2026.11.18"},
     {"emoji": "🌿", "name": "로즈마리",   "type": "허브",     "period": "2026.09.01 ~ 2026.10.20",
      "days": 49, "status": "완료",      "water": 16, "last_water": "2026.10.19"},

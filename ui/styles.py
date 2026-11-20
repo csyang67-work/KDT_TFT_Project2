@@ -199,6 +199,10 @@ div:has(> .st-key-plant_box) {         /* 식물 영역 */
     font-weight: 600;
     transition: 0.2s;
 }
+
+.st-key-ddongbutton_key button p {
+    font-size: 19px
+}
 .st-key-care_buttons button:hover {
     background: var(--light-green);
     border-color: var(--green);

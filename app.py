@@ -57,10 +57,21 @@ def clamp(value):
 
 
 def water_plant():
-    """물주기 버튼 콜백 (on_click 은 화면을 다시 그리기 전에 실행됨)"""
-    plant["수분"] = clamp(plant["수분"] + 20)
-    plant["영양"] = clamp(plant["영양"] + 10)
+    """물주기 버튼: AI에게 메시지를 보낸다"""
 
+    st.session_state.pending_input="물을 줄게"
+
+def repotting_plant():
+    """ 분갈이 버튼: AI에게 메시지를 보낸다 """
+    st.session_state.pending_input="분갈이를 할게"
+
+def fertilization_plant():
+    """ 비료주기 버튼: AI에게 메시지를 보낸다 """
+    st.session_state.pending_input="비료를 줄게"
+
+def move_plant():
+    """ 자리옮기기 버튼: AI에게 메시지를 보낸다. """
+    st.session_state.pending_input="자리를 옮길게"
 
 def chat_bubble(role, content):
     """말풍선 HTML 생성"""
@@ -112,10 +123,9 @@ def render_plant_area():
     with st.container(width=330, key="care_buttons"):
         b1, b2, b3, b4 = st.columns(4)
         b1.button("💧", width="stretch", help="물주기", on_click=water_plant)
-        b2.button("2", width="stretch", help="?")      # TODO: 기능 연결
-        b3.button("3", width="stretch", help="??")     # TODO: 기능 연결
-        b4.button("4", width="stretch", help="???")    # TODO: 기능 연결
-
+        b2.button("🌿", width="stretch", help="분갈이", on_click=repotting_plant)
+        b3.button("💩", width="stretch", help="비료주기", on_click=fertilization_plant, key="ddongbutton_key")
+        b4.button("➡️", width="stretch", help="자리옮기기", on_click=move_plant)
     # 상태창
     with st.container(border=True, width=330, height=235, key="status_box"):
         st.markdown('<div class="status-title">식물 상태</div>', unsafe_allow_html=True)
@@ -148,7 +158,9 @@ def render_chat_area():
                 )
 
         # 메시지 입력
-        user_input = st.chat_input("메시지를 입력하세요.")
+        typed = st.chat_input("메시지를 입력하세요.")
+        # 직접 입력한 메시지가 없으면, 버튼이 예약한 메시지를 꺼냄 (pop: 한 번 쓰면 삭제)
+        user_input = typed or st.session_state.pop("pending_input", None)
 
         if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
