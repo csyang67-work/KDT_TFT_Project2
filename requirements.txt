@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Oh! My Garden - 기본 백엔드 실행 환경
 # 학원에서 학습한 Python / FastAPI / LangChain / LangGraph / RAG(Chroma) 중심
 
