@@ -1,30 +1,35 @@
+# 앱 전체 CSS — app.py 에서 st.markdown(CSS, unsafe_allow_html=True) 로 적용
+# .st-key-XXX  → 파이썬에서 key="XXX" 를 준 요소
+# [class*="st-key-XXX_"] → key 가 "XXX_" 로 시작하는 요소 전부
 CSS = """
 <style>
 
-/* 1. 색상 변수
-   - 여기서 정한 색을 아래에서 var(--이름) 으로 가져다 씀 */
+/* 1. 색상 변수 — 여기서 정한 색을 아래에서 var(--이름) 으로 가져다 씀 */
 :root {
-    --zoom: 1.1;               /* 화면 확대 비율 (아래 .stApp, 높이 계산에 사용) */
+    --zoom: 1.1;               /* 화면 확대 비율 (.stApp, 높이 계산에 사용) */
+    --header-h: 56px;          /* 로고 헤더 높이 + 아래 여백 (카드 높이 계산에 사용) */
 
     /* 포인트 색 */
-    --green: #03C75A;          /* 사용자 말풍선, 버튼 hover 테두리 */
-    --dark-green: #008F45;     /* 배지 글자, 관리 버튼 글자 */
-    --light-green: #EAF8EF;    /* 관리 버튼 hover 배경 */
+    --green: #03C75A;          /* 사용자 말풍선, hover 테두리 */
+    --dark-green: #008F45;     /* 배지 글자, 버튼 글자 */
+    --light-green: #EAF8EF;    /* 버튼 hover 배경 */
 
     /* 배경 */
     --page-bg: #eff9f2;        /* 전체 화면 배경 */
-    --card-bg: #F7FAF7;        /* 카드(식물, 상태창, 채팅), 사이드바, 버튼 배경 */
-    --plant-top: #E3F1E7;      /* 식물 영역 위쪽 그라데이션 */
+    --sidebar-bg: #e3f1e7;     /* 사이드바 배경 */
+    --card-bg: #F7FAF7;        /* 카드(상태창, 채팅), 버튼, 팝업 배경 */
+    --white-card: #FFFFFF;     /* 팝업 안의 흰 카드 */
     --ai-bubble: #E8EFE9;      /* AI 말풍선 */
-    --badge-bg: #DDF0E3;       /* 식물 이름 배지, AI 아이콘 배경 */
+    --badge-bg: #DDF0E3;       /* 배지, 아이콘 배경 */
+    --done-bg: #ECEFED;        /* "완료" 배지 배경 */
 
     /* 테두리 */
-    --border: #22a643;         /* 상태창, 채팅 카드, 사이드바 테두리 */
-    --plant-border: #C4DECB;   /* 식물 영역, 관리 버튼 테두리 */
+    --border: #22a643;         /* 식물 영역, 상태창, 채팅 카드, 사이드바, 관리 버튼 */
+    --plant-border: #C4DECB;   /* 팝업 안 카드, 사이드바 메뉴 버튼 */
 
     /* 글자 */
-    --text: #26382D;           /* 기본 글자 (제목, 말풍선 등) */
-    --sub-text: #5F7064;       /* 보조 글자 (게이지 이름, 설명) */
+    --text: #26382D;           /* 기본 글자 */
+    --sub-text: #5F7064;       /* 보조 글자 (설명, 날짜 등) */
 }
 
 
@@ -32,7 +37,7 @@ CSS = """
 
 /* 앱 전체: 확대 비율 + 배경색 */
 .stApp {
-    zoom: var(--zoom);         /* 브라우저 110% 확대와 같은 효과 */
+    zoom: var(--zoom);
     background: var(--page-bg);
 }
 
@@ -49,10 +54,9 @@ header[data-testid="stHeader"] {
     background: transparent;
 }
 
-/* 사이드바 → st.sidebar */
+/* 사이드바 */
 [data-testid="stSidebar"] {
-    background: var(--card-bg);
-    background-color: #e3f1e7;
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--border);
 }
 
@@ -62,32 +66,57 @@ h1, h2, h3 {
 }
 
 
+/* 2-1. 로고 헤더 → app.py 의 render_header() */
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    margin-bottom: 12px;               /* height + margin-bottom = --header-h */
+}
+.app-logo-img {                        /* assets/logo.png 가 있을 때 */
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+.app-logo-emoji {                      /* 로고 파일이 없을 때 */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--badge-bg);
+    border-radius: 10px;
+    font-size: 24px;
+}
+.app-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark-green);
+    letter-spacing: -0.3px;
+}
+
+
 /* 3. 화면 높이에 맞춰 카드 크기 자동 조절
-   - 브라우저 창 높이(100vh)에 따라 카드 높이가 늘어남
    - max(최소값, 계산값): 창이 작아도 최소값보다 작아지지 않음
+   - var(--header-h): 위쪽 로고 헤더만큼 카드 높이를 줄임
    - 주의: 이 값이 파이썬의 height= 값보다 우선함 */
-
-/* 오른쪽 AI 채팅 카드 → key="ai_box" */
-div:has(> .st-key-ai_box) {
-    flex-basis: max(517px, calc(100vh / var(--zoom) - 160px)) !important;
-    height:     max(517px, calc(100vh / var(--zoom) - 160px)) !important;
+div:has(> .st-key-ai_box) {            /* AI 채팅 카드 */
+    flex-basis: max(517px, calc(100vh / var(--zoom) - 160px - var(--header-h))) !important;
+    height:     max(517px, calc(100vh / var(--zoom) - 160px - var(--header-h))) !important;
 }
-
-/* 채팅 기록 스크롤 영역 → key="chat_area" */
-div:has(> .st-key-chat_area) {
-    flex-basis: max(282px, calc(100vh / var(--zoom) - 395px)) !important;
-    height:     max(282px, calc(100vh / var(--zoom) - 395px)) !important;
+div:has(> .st-key-chat_area) {         /* 채팅 기록 스크롤 영역 */
+    flex-basis: max(282px, calc(100vh / var(--zoom) - 395px - var(--header-h))) !important;
+    height:     max(282px, calc(100vh / var(--zoom) - 395px - var(--header-h))) !important;
 }
-
-/* 왼쪽 식물 영역 → key="plant_box" */
-div:has(> .st-key-plant_box) {
-    flex-basis: max(210px, calc(100vh / var(--zoom) - 467px)) !important;
-    height:     max(210px, calc(100vh / var(--zoom) - 467px)) !important;
+div:has(> .st-key-plant_box) {         /* 식물 영역 */
+    flex-basis: max(210px, calc(100vh / var(--zoom) - 467px - var(--header-h))) !important;
+    height:     max(210px, calc(100vh / var(--zoom) - 467px - var(--header-h))) !important;
 }
 
 
-/* 4. 카드 공통 모양
-   → key="status_box" (상태창), key="ai_box" (AI 채팅) */
+/* 4. 메인 화면 카드 공통 → key="status_box", "ai_box" */
 .st-key-status_box,
 .st-key-ai_box {
     border: 1px solid var(--border) !important;
@@ -96,26 +125,26 @@ div:has(> .st-key-plant_box) {
 }
 
 
-/* 5. 식물 영역 → render_plant_area() 의 key="plant_box" */
+/* 5. 식물 영역 → key="plant_box" */
 
-/* 식물 카드 */
+/* 아래쪽 흙(갈색 그라데이션) + 나머지 흰 배경 */
 .st-key-plant_box {
     position: relative;
     border: 1px solid var(--border) !important;
     border-radius: 16px !important;
     background:
         linear-gradient(to top, #654323 5%, #9B7046 16%, transparent 25%),   /* 흙 */
-        linear-gradient(to top, #ffffff) !important;  /* 배경 */
+        #FFFFFF !important;                                                   /* 배경 */
     background-origin: border-box !important;
     background-repeat: no-repeat !important;
 }
 
-/* 식물 카드 안의 요소들이 카드 기준으로 위치를 잡도록 */
+/* 안쪽 요소들이 식물 영역 기준으로 위치를 잡도록 */
 .st-key-plant_box [data-testid="stElementContainer"] {
     position: static;
 }
 
-/* "● 식물 이름" 배지 → <div class="plant-badge"> */
+/* "● 식물 이름" 배지 */
 .plant-badge {
     display: inline-block;
     background: var(--badge-bg);
@@ -126,28 +155,21 @@ div:has(> .st-key-plant_box) {
     font-weight: 600;
 }
 
-/* 식물 이모지 + 성장 단계 + 설명을 감싸는 가운데 정렬 영역
-   → <div class="plant-center"> */
+/* 식물 이모지·성장 단계·설명 영역 (아래 3개는 나중에 성장 단계 표시할 때 사용) */
 .plant-center {
     text-align: center;
     margin-top: 30px;
 }
-
-/* 식물 이모지 (🌱 등) → <div class="plant-emoji"> */
 .plant-emoji {
     font-size: 72px;
     line-height: 1;
 }
-
-/* 성장 단계 글자 ("새싹" 등) → <div class="plant-stage"> */
 .plant-stage {
     font-size: 15px;
     font-weight: 700;
     color: #315C40;
     margin-top: 10px;
 }
-
-/* 식물 상황 설명 → <div class="plant-desc"> */
 .plant-desc {
     font-size: 12px;
     color: var(--sub-text);
@@ -155,36 +177,28 @@ div:has(> .st-key-plant_box) {
 }
 
 
-/* 6. 상태창 → render_plant_area() 의 key="status_box" */
-/* "식물 상태" 제목 → <div class="status-title"> */
-.status-title {
+/* 6. 상태창 → key="status_box" */
+.status-title {                        /* "식물 상태" */
     font-weight: 700;
     color: var(--text);
     margin-bottom: 4px;
 }
-
-/* 게이지 이름 ("수분", "영양") → <div class="status-label"> */
-.status-label {
+.status-label {                        /* "수분", "영양" */
     color: var(--sub-text);
     font-size: 13px;
     margin-bottom: 5px;
 }
 
 
-/* 7. 식물 관리 버튼 (💧, 2, 3, 4) → key="care_buttons"
-   - 이 컨테이너 안의 버튼에만 적용됨 */
-
-/* 기본 상태 */
+/* 7. 식물 관리 버튼 (💧, 2, 3, 4) → key="care_buttons" */
 .st-key-care_buttons button {
     background: var(--card-bg);
-    color: var(--black);
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 10px;
     font-weight: 600;
-    transition: 0.2s;          /* hover 색이 부드럽게 바뀌도록 */
+    transition: 0.2s;
 }
-
-/* 마우스를 올렸을 때 */
 .st-key-care_buttons button:hover {
     background: var(--light-green);
     border-color: var(--green);
@@ -192,16 +206,12 @@ div:has(> .st-key-plant_box) {
 }
 
 
-/* 8. AI 채팅 → render_chat_area() */
-
-/* 채팅 카드 맨 위 헤더 (아이콘 + "AI") → <div class="ai-header"> */
+/* 8. AI 채팅 헤더 (아이콘 + "AI") */
 .ai-header {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-
-/* 헤더의 🌱 아이콘 상자 → <div class="ai-header-icon"> */
 .ai-header-icon {
     width: 40px;
     height: 40px;
@@ -212,8 +222,6 @@ div:has(> .st-key-plant_box) {
     align-items: center;
     font-size: 25px;
 }
-
-/* 헤더의 "AI" 글자 → <div class="ai-header-title"> */
 .ai-header-title {
     font-size: 20px;
     font-weight: 700;
@@ -221,34 +229,26 @@ div:has(> .st-key-plant_box) {
 }
 
 
-/* 9. 채팅 말풍선 → chat_bubble() 함수가 만드는 HTML */
-
-/* 말풍선 한 줄 (아이콘 + 말풍선을 가로로 배치) */
-.chat-row {
+/* 9. 채팅 말풍선 → app.py 의 chat_bubble() */
+.chat-row {                            /* 아이콘 + 말풍선 한 줄 */
     display: flex;
     align-items: flex-start;
     gap: 8px;
     margin: 6px 0;
 }
-
-/* 사용자 메시지 줄: 순서를 뒤집어 오른쪽 정렬 */
-.chat-user {
+.chat-user {                           /* 사용자 줄: 오른쪽 정렬 */
     flex-direction: row-reverse;
 }
-
-/* 말풍선 옆 아이콘*/
 .chat-icon {
     width: 32px;
     height: 32px;
-    flex-shrink: 0;            /* 말풍선이 길어져도 아이콘이 찌그러지지 않게 */
+    flex-shrink: 0;                    /* 말풍선이 길어져도 찌그러지지 않게 */
     border-radius: 10px;
     background: var(--badge-bg);
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
-/* 말풍선 공통 모양 */
 .chat-bubble {
     max-width: 75%;
     padding: 9px 13px;
@@ -256,30 +256,26 @@ div:has(> .st-key-plant_box) {
     font-size: 14px;
     line-height: 1.5;
     color: var(--text);
-    word-break: break-word;    /* 긴 단어·URL이 말풍선 밖으로 넘치지 않게 */
+    word-break: break-word;            /* 긴 단어·URL 줄바꿈 */
 }
-
-/* AI 말풍선: 왼쪽, 연한 회녹색 */
-.chat-ai .chat-bubble {
+.chat-ai .chat-bubble {                /* AI: 왼쪽, 회녹색 */
     background: var(--ai-bubble);
-    border-top-left-radius: 4px;    /* 꼬리처럼 보이도록 한쪽 모서리만 덜 둥글게 */
+    border-top-left-radius: 4px;
 }
-
-/* 사용자 말풍선: 오른쪽, 초록색 */
-.chat-user .chat-bubble {
+.chat-user .chat-bubble {              /* 사용자: 오른쪽, 초록색 */
     background: var(--green);
     color: #FFFFFF;
     border-top-right-radius: 4px;
 }
 
-/* 10. 사이드바 메뉴 버튼 → app.py 의 key="sidebar_menu" */
+
+/* 10. 사이드바 메뉴 버튼 → key="sidebar_menu" */
 .st-key-sidebar_menu button {
     background: var(--card-bg);
     color: var(--text);
     border: 1px solid var(--plant-border);
     border-radius: 12px;
-    width: 200px
-    justify-content: flex-start;    /* 글자를 왼쪽 정렬 */
+    justify-content: flex-start;       /* 글자 왼쪽 정렬 */
     padding-left: 14px;
     transition: 0.2s;
 }
@@ -290,12 +286,73 @@ div:has(> .st-key-plant_box) {
 }
 
 
-/* 11. 팝업창 공통 → ui/dialogs.py 의 @st.dialog 들 */
+/* 11. 팝업 공통 → ui/dialogs.py */
 
-/* 팝업창 배경, 모서리 */
-div[role="dialog"] {
+div[role="dialog"] {                   /* 팝업창 배경, 모서리 */
     background: var(--card-bg);
     border-radius: 20px;
+}
+
+/* 팝업 안의 흰 카드 전부 */
+[class*="st-key-plant_card_"],         /* 식물 카드 */
+[class*="st-key-record_row_"],         /* 내 기록 한 줄 */
+[class*="st-key-stat_card_"],          /* 통계 그래프 카드 */
+[class*="st-key-stat_metric_"],        /* 통계 숫자 카드 */
+[class*="st-key-detail_box_"] {        /* 상세 팝업의 소개·메모 상자 */
+    background: var(--white-card);
+    border: 1px solid var(--plant-border) !important;
+    border-radius: 14px !important;
+    transition: 0.2s;
+}
+
+/* 누를 수 있는 카드는 마우스를 올리면 초록 테두리 */
+[class*="st-key-plant_card_"]:hover,
+[class*="st-key-stat_metric_"]:hover {
+    border-color: var(--green) !important;
+}
+
+/* 글자만 보이는 "자세히 보기 ›" 버튼 → key="stat_btn_...", "record_btn_..." */
+[class*="st-key-stat_btn_"] button,
+[class*="st-key-record_btn_"] button {
+    background: transparent;
+    border: none;
+    color: var(--dark-green);
+    font-size: 13px;
+    min-height: 0;
+    padding: 2px 0;
+}
+[class*="st-key-stat_btn_"] button:hover,
+[class*="st-key-record_btn_"] button:hover {
+    background: var(--badge-bg);
+    color: var(--dark-green);
+}
+
+/* "‹ ~로 돌아가기" 버튼 → key="back_to_..." */
+[class*="st-key-back_to_"] button {
+    background: transparent;
+    border: none;
+    color: var(--sub-text);
+    font-size: 13px;
+    padding: 0;
+    min-height: 0;
+}
+[class*="st-key-back_to_"] button:hover {
+    color: var(--dark-green);
+    background: transparent;
+}
+
+/* 팝업 안의 숫자 카드 (st.metric) */
+div[role="dialog"] [data-testid="stMetric"] {
+    background: var(--white-card);
+    border-radius: 14px;
+}
+
+/* 작은 굵은 제목 → section_title(), stat_card() */
+.stat-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
 }
 
 /* "식물 4개" 개수 표시 */
@@ -306,21 +363,8 @@ div[role="dialog"] {
 }
 
 
-/* 12. 식물 카드 → 새로 키우기, 식물 조회 팝업
-   key="plant_card_new_0", "plant_card_search_0", ...
-   [class*="..."] : 클래스 이름에 이 글자가 들어간 요소를 모두 고름 */
-[class*="st-key-plant_card_"] {
-    background: #FFFFFF;
-    border: 1px solid var(--plant-border) !important;
-    border-radius: 14px !important;
-    transition: 0.2s;
-}
-[class*="st-key-plant_card_"]:hover {
-    border-color: var(--green) !important;
-}
-
-/* 카드 윗줄 (이모지 + 이름) */
-.plant-card-head {
+/* 12. 식물 카드 내용 → render_plant_cards() */
+.plant-card-head {                     /* 이모지 + 이름 */
     display: flex;
     align-items: center;
     gap: 8px;
@@ -334,15 +378,13 @@ div[role="dialog"] {
     font-weight: 700;
     color: var(--text);
 }
-
-/* 태그 (관엽식물, 반그늘 ...) */
-.plant-card-tags {
+.plant-card-tags {                     /* 태그 묶음 */
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
     margin-bottom: 4px;
 }
-.plant-tag {
+.plant-tag {                           /* 태그 하나 (관엽식물, 반그늘 ...) */
     background: var(--badge-bg);
     color: var(--dark-green);
     font-size: 11px;
@@ -351,17 +393,8 @@ div[role="dialog"] {
 }
 
 
-/* 13. 내 기록 팝업 → key="record_row_0", "record_row_1", ... */
-
-/* 기록 한 줄 */
-[class*="st-key-record_row_"] {
-    background: #FFFFFF;
-    border: 1px solid var(--plant-border) !important;
-    border-radius: 14px !important;
-}
-
-/* 이모지 + (이름 / 기간) */
-.record-head {
+/* 13. 내 기록 한 줄 내용 → my_record_dialog() */
+.record-head {                         /* 이모지 + (이름 / 기간) */
     display: flex;
     align-items: center;
     gap: 12px;
@@ -380,7 +413,7 @@ div[role="dialog"] {
     margin-top: 2px;
 }
 
-/* 상태 배지: 키우는 중(초록) / 완료(회색) */
+/* 상태 배지 → status_badge_html() */
 .record-badge {
     display: inline-block;
     font-size: 12px;
@@ -388,30 +421,61 @@ div[role="dialog"] {
     padding: 4px 10px;
     border-radius: 12px;
 }
-.record-badge.ongoing {
+.record-badge.ongoing {                /* 키우는 중 */
     background: var(--badge-bg);
     color: var(--dark-green);
 }
-.record-badge.done {
-    background: #ECEFED;
+.record-badge.done {                   /* 완료 */
+    background: var(--done-bg);
     color: var(--sub-text);
 }
 
 
-/* 14. 통계 팝업 */
-
-/* 그래프 제목 */
-.stat-title {
-    font-size: 14px;
+/* 14. 상세 팝업 → 식물 정보, 기록 자세히 */
+.detail-head {                         /* 큰 이모지 + 이름 → detail_header() */
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0 16px;
+}
+.detail-emoji {
+    font-size: 56px;
+    line-height: 1;
+}
+.detail-name {
+    font-size: 22px;
     font-weight: 700;
     color: var(--text);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
-/* 숫자 카드 (st.metric) */
-div[role="dialog"] [data-testid="stMetric"] {
-    background: #FFFFFF;
+/* 키우기 정보 칸 (물 주기, 햇빛, 온도, 습도) */
+.info-tile {
+    background: var(--white-card);
+    border: 1px solid var(--plant-border);
     border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+    margin-bottom: 12px;
+}
+.info-icon {
+    font-size: 22px;
+}
+.info-label {
+    font-size: 12px;
+    color: var(--sub-text);
+    margin-top: 4px;
+}
+.info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 2px;
+}
+
+/* 소개·관리 팁·성장 기록·메모 상자 높이 */
+[class*="st-key-detail_box_"] {
+    min-height: 160px;
 }
 
 </style>
